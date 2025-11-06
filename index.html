@@ -1,17 +1,592 @@
 <!DOCTYPE html>
-<html>
-  <body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jay Rangam</title>
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <style>
+    /* ---------- Base / Desktop (keeps your layout & colors) ---------- */
+    body {
+      background: snow;
+      color: #000;
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: row;
+      overflow-x: hidden;
+    }
+a.active-link {
+  color: #ff4c4c !important;
+}
+
+    #menu { width: 220px; min-width: 220px; }
+    #menu .container { padding: 20px 20px 20px 35px; }
+    #menu .sidebar-title {
+      font-size: 1em;
+      font-weight: normal;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-left: 20px;
+      cursor: pointer;
+    }
+    #menu .menu-content ul { padding-left: 20px; }
+    #menu .menu-content li { margin-left: 0; }
+    ul { list-style-type: none; padding-left: 0; margin: 0 0 1em 0; }
+    li { margin-bottom: 6px; }
+    a { color: grey; text-decoration: none; transition: color 0.2s ease; cursor: pointer; }
+    a:hover { color: #FF4C4C; }
+    @media (min-width: 769px) {
+    #content { flex: 1; display: flex; align-items: flex-start; padding-top: 45px; } } 
+    #content .container { width: 100%; margin: 0; padding: 0 0 0 80px; position: relative; } 
+
+    .year-section { display: none; position: relative; }
+    .year-section.active {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 60px;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    /* each image block wrapper */
+    .year-section > div { position: relative; }
+
+    .year-section img {
+      max-width: 200px;
+      height: auto;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.08);
+      display: block;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+      border: 1px solid black; /* ← added line */
+    }
+    .year-section img:hover { transform: scale(1.02); }
+
+    /* hide mobile-only UI by default (desktop) */
+    .mobile-number { display: none; }
+    .mobile-caption-list { display: none; }
+
+    .fade { opacity: 0; transition: opacity 0.4s ease; }
+    .fade.show { opacity: 1; }
+
+    /* ---------- Lightbox (desktop & mobile) ---------- */
+    #lightbox {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.97);
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 40px 0;
+    }
+    #lightbox.show { display: flex; }
+
+    #lightbox .lightbox-item {
+      margin-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Desktop: full images visible */
+#lightbox .lightbox-item img {
+  max-width: 95vw;       /* max width is 95% of viewport width */
+  max-height: 90vh;      /* max height is 90% of viewport height */
+  width: auto;
+  height: auto;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  border: 1px solid black;
+  object-fit: contain;    /* ensures image fits in the box */
+}
 
 
-    <h1>Jay's Website</h1>
-<p>Welcome! <a href="http://neocities.org"> Check out Neocities!</a> </p>
-<img src="/neocities.png">
-<h2>Interests</h2>
-<ul> 
-<li> 
-<a href="http://yarn.com">art</a></li>
-<li>Bicycle</li> 
-<li>shosho</li>
-</ul>
-  </body>
+    /* fixed-caption under each lightbox image */
+    #lightbox .lightbox-caption {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 0.85em;
+      color: #444;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.4;
+      width: min(86%, 900px);
+      /* visually attached to the image: not sticky here; it's under each image */
+    }
+
+    /* slight offset for 2018/2024 as your original layout had */
+    #2018.year-section > div,
+    #2024.year-section > div { position: relative; top: 100px; }
+
+    /* ---------- Mobile-only UI ---------- */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      #menu { width: 100%; min-width: auto; border-bottom: 1px solid transparent; }
+      #content .container { padding: 0 20px; }
+
+      /* show small number to the RIGHT of each image */
+      .year-section > div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mobile-number {
+        display: inline-block;
+        font-size: 0.9em;
+        color: #000;
+        margin-left: 6px;
+        width: auto;
+      }
+
+      /* after each year's images show a compact numbered caption list */
+      .mobile-caption-list {
+        display: block;
+        font-size: 0.9em;
+        color: #444;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        margin-top: 10px;
+        padding-left: 18px;
+        width: 100%;
+        max-width: none;
+      }
+      .mobile-caption-list ol {
+        padding-left: 18px;
+        margin: 0;
+      }
+      .mobile-caption-list li {
+        margin-bottom: 8px;
+        line-height: 1.3;
+      }
+
+      /* shrink lightbox image max-width a bit on mobile */
+      #lightbox .lightbox-item img { max-width: 92%; }
+      #lightbox { padding: 20px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <div class="container">
+      <div class="sidebar-title" onclick="showYear('home')">Jay Rangam</div>
+      <div class="menu-content">
+        <ul>
+          <li class="section-title">***</li>
+          <li><a href="#" onclick="showYear('home')">home</a></li>
+        </ul>
+        <ul>
+          <li class="section-title">selected works</li>
+          <li><a href="#" onclick="yearClick('2024')">2024</a></li>
+          <li><a href="#" onclick="yearClick('2023')">2023</a></li>
+          <li><a href="#" onclick="yearClick('2022')">2022</a></li>
+          <li><a href="#" onclick="yearClick('2021')">2021</a></li> 
+          <li><a href="#" onclick="yearClick('2020')">2020</a></li>
+          <li><a href="#" onclick="yearClick('2019')">2019</a></li>
+          <li><a href="#" onclick="yearClick('2018')">2018</a></li>
+
+
+        </ul>
+        <ul>
+          <li class="section-title">info</li>
+          <li><a href=<li><a href="mailto:jay.rangam@mail.com">contact</a></li>
+          <li><a href="Jay_Rangam_CV_2025.pdf" download="Jay_Rangam_CV_2025.pdf">CV</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="container">
+      <div id="home" class="year-section active fade show">&nbsp;</div>
+
+     <!-- ========== 2024 (updated with two new images at the top) ========== -->
+<div id="2024" class="year-section">
+  <div>
+    <img src="images/JayRangam_Okay:Roosters_2024_OilAcrylic&CharcoalOnCanvas_31x41Inches.jpg" alt="Okay:Roosters">
+    <span class="mobile-number">3</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Buzzing_2024_OilOnCanvas_34x44Inches.jpg" alt="Buzzing">
+    <span class="mobile-number">4</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_BackAgainstWall_2024_OilAcrylic&GouacheOnCanvas_32x42Inches.jpg" alt="Back Against Wall">
+    <span class="mobile-number">5</span>
+  </div>
+
+  <!-- mobile-only caption list for 2024 (hidden on desktop by CSS) -->
+  <div class="mobile-caption-list" aria-hidden="true">
+    <ol>
+      <li>Okay: Roosters — oil, acrylic & charcoal on canvas, 31 × 41 inches</li>
+      <li>Buzzing — oil on canvas, 34 × 44 inches</li>
+      <li>Back Against Wall — oil, acrylic & gouache on canvas, 32 × 42 inches</li>
+    </ol>
+  </div>
+</div>
+
+      <!-- ========== 2023 ========== -->
+      <div id="2023" class="year-section">
+        <div>
+          <img src="images/JayRangam_Putto_2023_OilPins&PaperOnLinen_30x40Inches.jpg" alt="Putto">
+          <span class="mobile-number">1</span>
+        </div>
+        <div>
+          <img src="images/JayRangam_IDENTIFICATION!_2023_MixedMediaOnMuslin_32x40inches.jpg" alt="IDENTIFICATION!">
+          <span class="mobile-number">2</span>
+        </div>
+        <div>
+          <img src="images/JayRangam_Blooming_2023_Oil&AcrylicOnMuslin_40x50inches.jpg" alt="Blooming">
+          <span class="mobile-number">3</span>
+        </div>
+
+        <div class="mobile-caption-list" aria-hidden="true">
+          <ol>
+            <li>Putto — oil, pins & paper on linen, 30 x 40 inches</li>
+            <li>IDENTIFICATION! — mixed media on muslin, 32 x 40 inches</li>
+            <li>Blooming — oil & acrylic on muslin, 40 x 50 inches</li>
+          </ol>
+        </div>
+      </div>
+
+     
+      <!-- ========== 2022 ========== -->
+<div id="2022" class="year-section">
+  <div>
+    <img src="images/JayRangam_TissueBoxSeriality_2022_Acrylic&ColoredPencilOnLinen_24x30Inches.jpg" alt="Tissue Box Seriality">
+    <span class="mobile-number">1</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Mockingbird_2022_Acrylic&ColoredPencilOnBurlap_24x30Inches.jpg" alt="Mockingbird">
+    <span class="mobile-number">2</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_CountingLetters_2022_OilOnBurlap_36x48Inches.jpg" alt="Counting Letters">
+    <span class="mobile-number">3</span>
+  </div>
+  <div class="mobile-caption-list" aria-hidden="true">
+    <ol>
+      <li>Tissue Box Seriality — acrylic & colored pencil on linen, 24 × 30 inches</li>
+      <li>Mockingbird — acrylic & colored pencil on burlap, 24 × 30 inches</li>
+      <li>Counting Letters — oil on burlap, 36 × 48 inches</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ========== 2021 ========== -->
+<div id="2021" class="year-section">
+  <div>
+    <img src="images/JayRangam_6Fishes_2021_AcrylicOnCardboard_24x24Inches.jpg" alt="6 Fishes">
+    <span class="mobile-number">1</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_April_2021_OilOnWoodPanel_8x8Inches.jpg" alt="April">
+    <span class="mobile-number">2</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_HiddenCamera_2021_OilOnWoodPanel_12x12Inches.jpg" alt="Hidden Camera">
+    <span class="mobile-number">3</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Untitled_2021_Oil&AcrylicOnCanvas_12x32Inches.jpg" alt="Untitled (12x32)">
+    <span class="mobile-number">4</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Slouching_2021_OilOnCanvas_20x16Inches.jpg" alt="Slouching">
+    <span class="mobile-number">5</span>
+  </div> 
+  <div>
+    <img src="images/JayRangam_StudyOfRoses(AfterMorikazuKumagai)_2021_OilOnWoodPanel_8x10Inches.jpg" alt="Study of Roses (After Morikazu Kumagai)">
+    <span class="mobile-number">6</span>
+  </div> 
+  <!-- mobile-only caption list -->
+  <div class="mobile-caption-list" aria-hidden="true">
+    <ol>
+      <li>6 Fishes — acrylic on cardboard, 24 × 24 inches</li>
+      <li>April — oil on wood panel, 8 × 8 inches</li>
+      <li>Hidden Camera — oil on wood panel, 12 × 12 inches</li>
+      <li>Untitled — oil & acrylic on canvas, 12 × 32 inches</li>
+      <li>Slouching — oil on canvas, 20 × 16 inches</li>
+      <li>Study of Roses — oil on wood panel, 8 x 10 inches</li>
+    </ol>
+  </div>
+</div>
+<!-- 2020 -->
+<div id="2020" class="year-section">
+  <div>
+    <img src="images/JayRangam_Untitled_2020_OilAcrylic&GraphiteOnCanvas_40x32Inches.jpg" alt="Untitled (2020)">
+    <span class="mobile-number">1</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_WoodDucks_2020_AcrylicOnCanvas_19.8x23.6Inches.jpg" alt="Wood Ducks">
+    <span class="mobile-number">2</span>
+  </div>
+<div>
+    <img src="images/JayRangam_Untitled_2020_AcrylicOnCardboard_12x32Inches.jpg" alt="Untitled">
+    <span class="mobile-number">3</span>
+  </div>
+<div>
+    <img src="images/JayRangam_Untitled_2020_OilOnWoodPanel_7x5Inches.jpg" alt="Untitled">
+    <span class="mobile-number">4</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Change_2020_OilOnWoodPanel_6x4Inches.jpg" alt="Change">
+    <span class="mobile-number">5</span>
+  </div>
+  <div class="mobile-caption-list" aria-hidden="true">
+    <ol>
+      <li>Untitled — oil, acrylic & graphite on canvas, 40 × 32 inches</li>
+      <li>Wood Ducks — acrylic on canvas, 19.8 × 23.6 inches</li>
+      <li>Untitled — acrylic on cardboard, 12 x 32 inches</li>
+      <li>Untitled — oil on wood panel, 7 x 5 inches</li>
+      <li>Change — oil on wood panel, 6 x 4 inches</li> 
+    </ol>
+  </div>
+</div>
+<!-- ========== 2019 ========== -->
+<div id="2019" class="year-section">
+  <div>
+    <img src="images/JayRangam_Untitled_2019_Oil&AcrylicOnCanvas_40x60inches.jpg" alt="Untitled (2019)">
+    <span class="mobile-number">1</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Cheerleader_2019_Acrylic&InkOnPaper&Cardboard_24.2x51.5Inches.jpg" alt="Cheerleader">
+    <span class="mobile-number">2</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_Transportation_2019_Oil&ColoredPencilOnWoodPanel_26x51Inches(FourPanels).jpg" alt="Transportation">
+    <span class="mobile-number">3</span>
+  </div>
+
+  <div class="mobile-caption-list" aria-hidden="true">
+    <ol>
+      <li>Untitled — oil & acrylic on canvas, 40 × 60 inches</li>
+      <li>Cheerleader — acrylic & ink on paper & cardboard, 24.2 × 51.5 inches</li>
+      <li>Transportation — oil & colored pencil on wood panel (four panels), 26 × 51 inches</li>
+    </ol>
+  </div>
+</div>
+<!-- ========== 2018 ========== -->
+<div id="2018" class="year-section">
+  <div>
+    <img src="images/JayRangam_Untitled_2018_InkOnPaper_8.5x11Inches.jpg" alt="Untitled">
+    <span class="mobile-number">1</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_ObserverOfSnow_2018_MixedMediaOnWood_5x14.7Inches.jpg" alt="Observer of Snow">
+    <span class="mobile-number">2</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_54Keele_OilOnWood_35.8x16.5Inches.jpg" alt="54 Keele">
+    <span class="mobile-number">3</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_CityOrMountain_Ink&ColoredPencilOnPaper&Wood_24x24Inches.jpg" alt="City or Mountain">
+    <span class="mobile-number">4</span>
+  </div>
+  <div>
+    <img src="images/JayRangam_HighPark_OilAcrylic&ColoredPencilOnWood.jpg" alt="High Park">
+    <span class="mobile-number">5</span>
+  </div>
+
+  <div class="mobile-caption-list" aria-hidden="true">
+    <ol>
+      <li>Untitled — ink on paper, 8.5 x 11 inches</li>
+      <li>Observer of Snow — mixed media on wood, 5 x 14.7 inches</li>
+      <li>54 Keele — oil on wood, 35.8 x 16.5 inches</li>
+      <li>City or Mountain — ink & colored pencil on paper & wood, 24 x 24 inches</li>
+      <li>High Park — oil, acrylic and colored pencil on wood</li>
+    </ol>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+  <!-- Lightbox container -->
+  <div id="lightbox"></div>
+
+  <script>
+(function () {
+  const lightbox = document.getElementById("lightbox");
+  let lightboxOpen = false;
+  let pushedState = false;
+
+  /* Captions text (title — materials, dimensions in inches).
+     These are used for the lightbox (full captions). */
+  const yearCaptions = {
+  "2024": [
+  "Okay: Roosters — oil, acrylic & charcoal on canvas, 31 × 41 inches",
+  "Buzzing — oil on canvas, 34 × 44 inches",
+  "Back Against Wall — oil, acrylic & gouache on canvas, 32 × 42 inches",
+  ],
+
+  "2023": [
+    "Putto — oil, pins & paper on linen, 30 × 40 inches",
+    "IDENTIFICATION! — mixed media on muslin, 32 × 40 inches",
+    "Blooming — oil & acrylic on muslin, 40 × 50 inches",
+   
+  ],
+  "2022": [
+  "Tissue Box Seriality — acrylic & colored pencil on linen, 24 × 30 inches",
+  "Mockingbird — acrylic & colored pencil on burlap, 24 × 30 inches",
+  "Counting Letters — oil on burlap, 36 × 48 inches",
+  ],
+  "2021": [
+    "6 Fishes — acrylic on cardboard, 24 × 24 inches",
+    "April — oil on wood panel, 8 × 8 inches",
+    "Hidden Camera — oil on wood panel, 12 × 12 inches",
+    "Untitled — oil & acrylic on canvas, 12 × 32 inches",
+    "Slouching — oil on canvas, 20 × 16 inches",
+    "Study of Roses (After Morikazu Kumagai) — oil on wood panel, 8 x 10 inches",
+ 
+  ], 
+"2020": [
+  "Untitled — oil, acrylic & graphite on canvas, 40 × 32 inches",
+  "Wood Ducks — acrylic on canvas, 19.8 × 23.6 inches",
+  "Untitled — acrylic on cardboard, 12 x 32 inches",
+  "Untitled — oil on wood panel, 7 x 5 inches",
+  "Change — oil on wood panel, 6 x 4 inches",
+  
+],
+"2019": [
+  "Untitled — oil & acrylic on canvas, 40 × 60 inches",
+  "Cheerleader — acrylic & ink on paper & cardboard, 24.2 × 51.5 inches",
+  "Transportation — oil & colored pencil on wood panel (four panels), 26 × 51 inches",
+],
+"2018": [
+  "Untitled — ink on paper, 8.5 x 11 inches",
+  "Observer of Snow — mixed media on wood, 5 x 14.7 inches",
+  "54 Keele — oil on wood, 35.8 x 16.5 inches",
+  "City or Mountain — ink & colored pencil on paper & wood, 24 x 24 inches",
+  "High Park — oil, acrylic and colored pencil on wood,",
+],
+
+
+};
+
+
+  function openLightboxForYear(year, clickedIndex = 0) {
+    if (!pushedState) {
+      try { history.pushState({ lightbox: true }, ""); } catch(e) {}
+      pushedState = true;
+    }
+
+    lightbox.innerHTML = "";
+    const yearSection = document.getElementById(year);
+    if (!yearSection) return;
+    const imgs = Array.from(yearSection.querySelectorAll("img"));
+
+    imgs.forEach((img, i) => {
+      const item = document.createElement("div");
+      item.className = "lightbox-item";
+
+      const clone = document.createElement("img");
+      clone.src = img.src;
+      clone.alt = img.alt || "";
+      item.appendChild(clone);
+
+      const cap = document.createElement("div");
+      cap.className = "lightbox-caption";
+      cap.textContent = (yearCaptions[year] && yearCaptions[year][i]) ? yearCaptions[year][i] : "";
+      item.appendChild(cap);
+
+      lightbox.appendChild(item);
+
+      // click the large image to close
+      clone.addEventListener("click", () => closeLightbox(false));
+    });
+
+    lightbox.classList.add("show");
+    lightboxOpen = true;
+
+    // scroll to clicked item
+    const clickedItem = lightbox.children[clickedIndex];
+    if (clickedItem) clickedItem.scrollIntoView({ block: "start" });
+  }
+
+  function closeLightbox(fromPopstate = false) {
+    if (!lightboxOpen) return;
+    lightbox.classList.remove("show");
+    lightboxOpen = false;
+    if (pushedState && !fromPopstate) {
+      try { history.back(); } catch(e) {}
+    }
+    pushedState = false;
+  }
+
+  function yearClick(year) {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile && ["2018","2019","2020","2021","2022","2023","2024"].includes(year)) {
+      // open year as lightbox on mobile (keeps previous behavior)
+      openLightboxForYear(year, 0);
+    } else {
+      showYear(year);
+    }
+  }
+
+  function showYear(year) {
+  // Remove active class from all links
+  document.querySelectorAll('#menu a').forEach(a => a.classList.remove('active-link'));
+
+  // Add active class to the clicked one
+  const activeLink = Array.from(document.querySelectorAll('#menu a')).find(a => {
+    const onclickAttr = a.getAttribute('onclick');
+    return onclickAttr && onclickAttr.includes(year);
+  });
+  if (activeLink) activeLink.classList.add('active-link');
+
+  // Show the target section
+  document.querySelectorAll(".year-section").forEach(s => s.classList.remove("active", "show"));
+  const target = document.getElementById(year);
+  if (target) {
+    target.classList.add("active", "fade");
+    setTimeout(() => target.classList.add("show"), 50);
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+
+  function init() {
+    // prevent default for '#' anchors
+    document.querySelectorAll('a[href="#"]').forEach(a => a.addEventListener("click", e => e.preventDefault()));
+
+    // clicking thumbnails opens the lightbox and scrolls to clicked image
+    document.querySelectorAll(".year-section img").forEach(img => {
+      img.addEventListener("click", () => {
+        const yearSection = img.closest(".year-section");
+        if (!yearSection) return;
+        const imagesInYear = Array.from(yearSection.querySelectorAll("img"));
+        const clickedIndex = imagesInYear.indexOf(img);
+        openLightboxForYear(yearSection.id, clickedIndex);
+      });
+    });
+
+    // click outside large image closes lightbox
+    lightbox.addEventListener("click", (e) => {
+      if (!e.target.closest("img")) closeLightbox(false);
+    });
+
+    // esc closes
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(false); });
+
+    // back button closes lightbox
+    window.addEventListener("popstate", () => { if (lightboxOpen) closeLightbox(true); });
+  }
+
+  window.yearClick = yearClick;
+  window.showYear = showYear;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+  </script>
+</body>
 </html>
